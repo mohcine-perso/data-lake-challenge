@@ -1,0 +1,9 @@
+venv
+volume
+*cache
+*.tfstate
+*.tfstate.backup
+**.terraform.lock.hcl
+
+.terraform/
+.DS_Store
