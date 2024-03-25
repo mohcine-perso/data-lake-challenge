@@ -21,6 +21,7 @@ logging.basicConfig(**BASIC_LOGGING_CONFIG)
 LOGGER = logging.getLogger(__name__)
 
 
+REMOTE_SERVER = "localhost"
 REGION = "us-east-1"
 STREAM_NAME = "babbel-events-staging"
 KINESIS_ENDPOINT_URL = "http://localhost:4566"

@@ -1,14 +1,24 @@
 variable "region" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "environment" {
-    type = string
-    default = ""
+  type    = string
+  default = ""
 }
 
 variable "aws_credentials_profile" {
-  type = string
+  type    = string
+  default = ""
+}
+
+variable "spark_jobs_file_path" {
+  type    = string
+  default = ""
+}
+
+variable "lambda_file_path" {
+  type    = string
   default = ""
 }

@@ -1,5 +1,6 @@
 venv
 volume
+**__pycache__
 *cache
 *.tfstate
 *.tfstate.backup

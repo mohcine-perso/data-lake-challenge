@@ -9,19 +9,21 @@ terraform {
 
 
 provider "aws" {
-  region                      = var.region
-  profile                     = var.aws_credentials_profile
+  region = var.region
+  #profile                     = var.aws_credentials_profile
   s3_use_path_style           = true
   skip_credentials_validation = true
-  skip_requesting_account_id  = true
-  #skip_metadata_api_check     = true
+  access_key                  = "test"
+  secret_key                  = "test"
 
   endpoints {
-    s3       = "https://s3.amazonaws.com"
-    iam      = "https://iam.amazonaws.com"
-    kinesis  = "https://kinesis.amazonaws.com"
-    glue     = "https://glue.amazonaws.com"
-    firehose = "https://firehose.amazonaws.com"
-    # s3      = "http://localhost:4566"
+    s3          = "http://localhost:4566"
+    iam         = "http://localhost:4566"
+    kinesis     = "http://localhost:4566"
+    glue        = "http://localhost:4566"
+    firehose    = "http://localhost:4566"
+    eventbridge = "http://localhost:4566"
+    scheduler   = "http://localhost:4566"
+    lambda      = "http://localhost:4566"
   }
 }

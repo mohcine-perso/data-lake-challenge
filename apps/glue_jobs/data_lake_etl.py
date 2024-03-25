@@ -1,6 +1,5 @@
 import sys
 import logging
-import argparse
 from abc import ABC
 from abc import abstractmethod
 
@@ -10,6 +9,13 @@ from pyspark.sql.types import StructType
 from pyspark.sql.functions import col
 from pyspark.sql.functions import split
 from pyspark.sql.functions import from_unixtime
+from pyspark.sql.functions import to_date
+from pyspark.sql.functions import year
+from pyspark.sql.functions import month
+from pyspark.sql.functions import dayofmonth
+from pyspark.sql.functions import hour
+
+from awsglue.utils import getResolvedOptions
 
 
 from pyspark.sql.types import StructField
@@ -93,20 +99,32 @@ class ToSilverETL(BaseETL):
         super().__init__(spark, schema, input_location, output_location)
 
     def extract(self) -> DataFrame:
+        LOGGER.info("Extract data from {self.input_location}")
         return self.spark.read.json(self.input_location)
 
     def transform(self, df: DataFrame) -> DataFrame:
+        LOGGER.info("Run data transformation ...")
         df = (
             df.withColumn(
                 "created_datetime", from_unixtime(col("created_at")).cast("timestamp")
             )
             .withColumn("event_type", split(col("event_name"), ":").getItem(0))
             .withColumn("event_subtype", split(col("event_name"), ":").getItem(1))
+            .withColumn("year", year("created_datetime"))
+            .withColumn("month", month("created_datetime"))
+            .withColumn("day", dayofmonth("created_datetime"))
+            .withColumn("hour", hour("created_datetime"))
         )
         return df
 
     def load(self, df: DataFrame) -> DataFrame:
-        return df.write.mode("overwrite").json(self.output_location)
+        partitions = ["year", "month", "day", "hour"]
+        LOGGER.info(f"Write data to {self.output_location}")
+        return (
+            df.write.partitionBy(partitions)
+            .mode("overwrite")
+            .parquet(self.output_location)
+        )
 
 
 class ToGoldETL(BaseETL):
@@ -120,38 +138,54 @@ class ToGoldETL(BaseETL):
         super().__init__(spark, input_location, output_location, schema)
 
     def extract(self) -> DataFrame:
-        return self.spark.read.json(self.input_location)
+        LOGGER.info("Extract data from {self.input_location}")
+        return self.spark.read.parquet(self.input_location, schema=self.schema)
 
     def transform(self, df: DataFrame) -> DataFrame:
-        return df.dropDuplicates(["event_uuid"])
+        LOGGER.info("Run data transformation ...")
+        df = df.withColumn(
+            "created_date", to_date(col("created_datetime"))
+        ).dropDuplicates(["event_uuid"])
+        return df
 
     def load(self, df: DataFrame) -> DataFrame:
-        return df.write.mode("overwrite").parquet(self.output_location)
+        partitions = ["created_date", "event_type"]
+        LOGGER.info(f"Write data to {self.output_location}")
+        return (
+            df.write.partitionBy(partitions)
+            .mode("overwrite")
+            .parquet(self.output_location)
+        )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--bucket-name", type=str, help="Bucket Name", default="sparks-jobs-staging"
+    args = getResolvedOptions(
+        sys.argv, ["JOB_NAME", "input-location", "output-location", "etl-direction"]
     )
-    parser.add_argument(
-        "--etl-direction", type=str, help="ETL Direction", default="to-silver"
+
+    etl_direction = args["etl_direction"]
+    input_location = args["input-location"]
+    output_location = args["output-location"]
+
+    LOGGER.info(
+        f"ETL Direction: {etl_direction} from {input_location} to {output_location}"
     )
-    args = parser.parse_args()
 
     spark = SparkSession.builder.appName("babbel-data-lake").getOrCreate()
-    if args.etl_direction not in ETL_DIRECTION:
-        LOGGER.error(f"Invalid ETL Direction: {args.etl_direction}")
+
+    if etl_direction not in ETL_DIRECTION:
+        LOGGER.error(f"Invalid ETL Direction: {etl_direction}")
         sys.exit(1)
-    elif args.etl_direction == "to-silver":
+    elif etl_direction == "to-silver":
         etl = ToSilverETL(
             spark,
-            f"s3a://{args.bucket_name}/bronze",
-            f"s3a://{args.bucket_name}/silver",
+            input_location,
+            output_location,
         )
-    elif args.etl_direction == "to-gold":
+    elif etl_direction == "to-gold":
         etl = ToGoldETL(
-            spark, f"s3a://{args.bucket_name}/silver", f"s3a://{args.bucket_name}/gold"
+            spark,
+            input_location,
+            output_location,
         )
-
     etl.run()
