@@ -1,6 +1,6 @@
 # Data Lake Challenge
 
-This project serves is an implementation for the Data Lake Challenge, focusing on constructing a data lake from streaming events.
+This project is an implementation for the Data Lake Challenge, focusing on constructing a data lake from streaming events.
 
 ## Prerequisites
 
@@ -91,25 +91,28 @@ $ make stream
 
 ![System Overview](assets/babbel-data-lake-challenge.jpg)
 
-The data lake architecture proposal implements the medallion architecture design pattern introduced by Databricks.
+The data lake architecture proposal implements the `medallion architecture` design pattern introduced by Databricks.
 
-The end-to-end architecture consists of an AWS Kinesis stream for real-time event data ingestion as the source, with a Firehose delivery stream application consuming from stream.
+#### Descritpion:
 
-Raw events received are forwarded to a data lake S3 bucket, in a sub-director constituting the bronze layer.
+The end-to-end architecture consists of an AWS Kinesis stream for real-time event data ingestion as the source, with a Firehose delivery stream application consuming from the stream.
 
-Data is stored partitioned by datetime till the hour level as follow YYYY/MM/DD/HH and in JSON format bypassing immediate format transformation in Firehose, to prioritize cost efficiency over storage optimization.
+Raw events received are forwarded to a `data lake S3 bucket`, in a sub-director constituting the `bronze layer`.
 
-Data transformations are applied while moving the data to the silver layer to make it refined and ready to be queried if necesserary.
+Data is stored partitioned by datetime till the hour level as follow `YYYY/MM/DD/HH` and in `JSON format` to bypass immediate data format transformation in Firehose, and prioritize cost efficiency over storage optimization.
 
-In the silver layer data partitioned by datetime till the hour level like the bronze leyer and stored in parquet format which is a columnar storage format optimized for analytics workloads. It offers advantages such as efficient compression and schema evolution support, making it well-suited for analytical queries, and ready to be queried by any SQL engine like Athena or Presto.
+Data transformations are applied while moving the data to the `silver layer` to make it refined and ready to be queried if necesserary.
 
-The ETL process from the bronze to the silver layer is a Spark job running on AWS Glue, triggered hourly by AWS EventBridge through a Lambda function. And this integration ensures scalability, and simplified management. And also the frequency comes as a good balance between avoiding the overhead and the cost of real-time processing and ensuring the data remains sufficiently up-to-date for analytical purposes.
+In the silver layer data partitioned by datetime till the hour level like the bronze leyer and stored in `Parquet format` which is a columnar storage format optimized for analytics workloads. It offers advantages such as efficient compression and schema evolution support, making it well-suited for analytical queries, and ready to be queried by any SQL engine like Athena or Presto.
 
-Then the ETL process from the silver to the gold layer runs on the same way of Spark-Glue <-> Lambda <-> EventBridge, and triggered on a daily basis to keep a marge for heavy transformations like data de-duplication and aggregation.
+The `ETL process` from the bronze to the silver layer is a `Spark job` running on `AWS Glue`, triggered `hourly` by `AWS EventBridge` through a `Lambda` function. And this integration ensures scalability, and simplified management. And also the frequency comes as a good balance between avoiding the overhead / the cost of real-time processing and ensuring the data remains sufficiently up-to-date for analytical purposes.
 
-Data in the gold layer is stored in Parquet format and partitioned by event_type and date of the following format YYYY-MM-DD, for easy querying per topic.
+Then the ETL process from the silver to the gold layer runs on the same way of Spark-Glue <-> Lambda <-> EventBridge, and triggered on a `daily` basis to keep a marge for heavy transformations like data `de-duplication` and `aggregation`.
+
+Data in the gold layer is stored in Parquet format and partitioned by `event_type` and date of the following format `YYYY-MM-DD`, for easy querying per topic.
 
 #### How would you ensure the architecture deployed can be replicable across environments?
+
 To ensure replicability across environments, I've parameterized the data-lake module by `environment`, `aws_profile`, and `region`. This makes it to reproduce it in new environments, maintains consistency.
 
 #### Would your proposed solution still be the same if the amount of events is 1000 times smaller or bigger?
