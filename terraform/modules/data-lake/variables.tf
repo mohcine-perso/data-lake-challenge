@@ -14,11 +14,11 @@ variable "aws_credentials_profile" {
 }
 
 variable "spark_jobs_file_path" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "lambda_file_path" {
-  type = string
+  type    = string
   default = ""
 }

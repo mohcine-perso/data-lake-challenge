@@ -69,7 +69,7 @@ def handler(event, context):
 
     elif etl_direction == "to-gold":
         input_location = f"s3://{bucket_name}/silver/{partition_path}"
-        output_location = f"s3://{bucket_name}/gold/{partition_path}"
+        output_location = f"s3://{bucket_name}/gold/"
     LOGGER.info(
         f"Input location: {input_location} and output location {output_location}"
     )

@@ -158,6 +158,17 @@ class ToGoldETL(BaseETL):
         )
 
 
+def etl_factory(
+    etl_direction: str, spark: SparkSession, input_location: str, output_location: str
+) -> BaseETL:
+    if etl_direction == "to-silver":
+        return ToSilverETL(spark, input_location, output_location)
+    elif etl_direction == "to-gold":
+        return ToGoldETL(spark, input_location, output_location)
+    else:
+        raise ValueError(f"Invalid ETL Direction: {etl_direction}")
+
+
 if __name__ == "__main__":
     args = getResolvedOptions(
         sys.argv, ["JOB_NAME", "input-location", "output-location", "etl-direction"]
@@ -170,22 +181,10 @@ if __name__ == "__main__":
     LOGGER.info(
         f"ETL Direction: {etl_direction} from {input_location} to {output_location}"
     )
-
     spark = SparkSession.builder.appName("babbel-data-lake").getOrCreate()
-
-    if etl_direction not in ETL_DIRECTION:
-        LOGGER.error(f"Invalid ETL Direction: {etl_direction}")
+    try:
+        etl = etl_factory(etl_direction, spark, input_location, output_location)
+        etl.run()
+    except ValueError as e:
+        LOGGER.error(e)
         sys.exit(1)
-    elif etl_direction == "to-silver":
-        etl = ToSilverETL(
-            spark,
-            input_location,
-            output_location,
-        )
-    elif etl_direction == "to-gold":
-        etl = ToGoldETL(
-            spark,
-            input_location,
-            output_location,
-        )
-    etl.run()

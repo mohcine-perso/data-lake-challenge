@@ -16,9 +16,9 @@ resource "aws_iam_role" "glue_trigger_lambda_service_role" {
       Effect = "Allow"
       Principal = {
         Service = [
-            "lambda.amazonaws.com",
-            "scheduler.amazonaws.com"
-            ]
+          "lambda.amazonaws.com",
+          "scheduler.amazonaws.com"
+        ]
       }
       Action = "sts:AssumeRole"
     }]

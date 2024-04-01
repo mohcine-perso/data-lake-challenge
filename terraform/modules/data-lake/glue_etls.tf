@@ -1,16 +1,16 @@
 resource "aws_glue_job" "data_lake_etl_job" {
-  name     = "datalake-etl-job-${var.environment}"
-  role_arn = aws_iam_role.glue_job_role.arn
-  worker_type = "G.1X"
+  name              = "datalake-etl-job-${var.environment}"
+  role_arn          = aws_iam_role.glue_job_role.arn
+  worker_type       = "G.1X"
   number_of_workers = 2
-  execution_class = "STANDARD"
+  execution_class   = "STANDARD"
 
   command {
     script_location = "s3://${aws_s3_bucket.executables.bucket}/data_lake_elt.py"
-    python_version = "3"
+    python_version  = "3"
   }
 
-  depends_on = [ aws_s3_object.data_lake_etl_spark_job ]
+  depends_on = [aws_s3_object.data_lake_etl_spark_job]
 }
 
 resource "aws_iam_role" "glue_job_role" {

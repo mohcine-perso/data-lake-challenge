@@ -23,7 +23,7 @@ def mock_extracted_bronze_data(spark: SparkSession):
             (1, "account:created", 1711315195),
             (2, "lesson:started", 1711314895),
             (2, "lesson:started", 1711314895),
-            (3, "quizz:completed", 1711314595, "2024-03-24 21:09:55"),
+            (3, "quizz:completed", 1711314595),
         ],
         ["event_uuid", "event_name", "created_at"],
     )

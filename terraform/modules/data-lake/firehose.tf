@@ -9,7 +9,7 @@ resource "aws_kinesis_firehose_delivery_stream" "events_delivery_stream" {
     error_output_prefix = "firehose-errors/"
     buffering_size      = 1
     buffering_interval  = 60
-    compression_format = "UNCOMPRESSED"
+    compression_format  = "UNCOMPRESSED"
     processing_configuration {
       enabled = true
       processors {
